@@ -1,6 +1,10 @@
 ﻿// Các tính năng còn thiếu
 // - kiểm tra điều kiện dữ liệu nhập vào
-// - 
+// - các tính năng
+// - kiểm tra ngày tháng năm
+
+// - kiểm tra nhập dữ liệu
+
 
 #include <iostream>
 #include <string>
@@ -28,13 +32,13 @@ char listThucDon[SO_ITEM_MENU][50] = {  "--1.  Them vat tu",
 										"--6.  Xoa nhan vien",
 										"--7.  Hieu chinh nhan vien",
 										"x-8.  In danh sach nhan vien", // chưa liệt kê theo thứ tự yêu cầu
-										"9.  Lap hoa don",
+										"x-9.  Lap hoa don",
 										"10. Tra hang",
 										"11. In hoa don",
 										"12. Liet ke hoa don theo nhan vien",
 										"13. Load du lieu tu file",
 										"14. Luu du lieu vao file",
-										"--13. Thoat" };
+										"--15. Thoat" };
 
 // Biến
 int dong = 5;
@@ -107,11 +111,8 @@ struct LListHDNode {
 	HoaDon data;
 	struct LListHDNode* pNext;
 };
-typedef LListHDNode* LListHD;
 
-void InitLListHD(LListHD& L) { // Hàm khởi tạo DSLKĐ rỗng
-	L = NULL;
-}
+typedef LListHDNode* LListHD;
 
 LListHDNode* TaoNodeLListHD(HoaDon hoaDon) { // Hàm tạo 1 node cho DSLKĐ
 	LListHDNode* node = new LListHDNode;
@@ -128,6 +129,15 @@ void ThemNodeLListHD(LListHD & L, LListHDNode * node) // Thêm node vào đầu 
 	L = node;
 }
 
+LListHDNode* TimNodeLListHD(LListHD L, string maHoaDon) { // Tìm node trong DS
+	while (L != NULL)
+		if (L->data.soHoaDon == maHoaDon)
+			return L;
+		else
+			L = L->pNext;
+	return NULL;
+}
+
 // +++ End hoá đơn +++++ //
 
 // +++ Nhân viên ++ //
@@ -135,7 +145,7 @@ struct NhanVien {
 	int maNhanVien;
 	string ho;
 	string ten;
-	LListHD* listHD;
+	LListHD listHD;
 };
 
 // BST Nhân viên
@@ -147,7 +157,7 @@ struct BSTNVNode {
 };
 typedef BSTNVNode* BSTNVRoot;
 
-struct BSTNVNode* TaoNodeBSTNV(NhanVien data) {
+BSTNVNode* TaoNodeBSTNV(NhanVien data) {
 	BSTNVNode* node = new BSTNVNode;
 	if (node == NULL) // khởi tạo con trỏ bị lỗi
 		return NULL;
@@ -158,7 +168,7 @@ struct BSTNVNode* TaoNodeBSTNV(NhanVien data) {
 	return node;
 };
 
-void ThemNodeBSTNV(BSTNVRoot &L, BSTNVNode * node) {
+void ThemNodeBSTNV(BSTNVRoot & L, BSTNVNode * node) {
 	if (L == NULL) // TH cây rỗng
 		L = node;
 	else {
@@ -182,7 +192,7 @@ void ThemNodeBSTNV(BSTNVRoot &L, BSTNVNode * node) {
 	}
 };
 
-BSTNVRoot TimNodeBSTNV(BSTNVRoot& L, int key) {
+BSTNVRoot TimNodeBSTNV(BSTNVRoot & L, int key) {
 	if (L == NULL)
 		return NULL;
 	if (L->key == key)
@@ -193,7 +203,7 @@ BSTNVRoot TimNodeBSTNV(BSTNVRoot& L, int key) {
 		return TimNodeBSTNV(L->pRight, key);
 }
 
-void XoaNodeBSTNV(BSTNVRoot& L, int key) {
+void XoaNodeBSTNV(BSTNVRoot & L, int key) {
 	if (L == NULL) {
 		BaoLoi("Cay rong");
 		return;
@@ -266,10 +276,32 @@ void XoaNodeBSTNV(BSTNVRoot& L, int key) {
 			}
 			nodeDuyet->key = nodeDuyet2->key;
 			nodeDuyet->data = nodeDuyet2->data;
-			nodeCha2->pLeft = NULL;
+			nodeCha2->pLeft = nodeDuyet2->pRight;
 			delete nodeDuyet2;
 		}
 	}
+}
+
+LListHDNode* TimNodeHDBSTNV(BSTNVRoot L, string key) {
+	if (L == NULL)
+		return NULL;
+
+	LListHDNode * nodeTrai = NULL;
+	LListHDNode * nodePhai = NULL;
+	LListHDNode * nodeHD = L->data.listHD;
+
+	while (nodeHD != NULL)
+		if (nodeHD->data.soHoaDon == key)
+			return nodeHD;
+		else nodeHD = nodeHD->pNext;
+
+	nodeTrai = TimNodeHDBSTNV(L->pLeft, key);
+	nodePhai = TimNodeHDBSTNV(L->pRight, key);
+	if (nodeTrai != NULL)
+		return nodeTrai;
+	if (nodePhai != NULL)
+		return nodePhai;
+	return NULL;
 }
 
 //BSTNVRoot NodeNhoNhatBSTNV(BSTNVRoot& listNV) {
@@ -366,9 +398,9 @@ int TimVatTuTheoMa(ListVT listVT, string maVatTu) { // Tìm vị trí vật tư 
 	return -1;
 }
 
-void NhapVatTu(ListVT &listVT) { // Nhap danh sach vat tu
+void NhapVatTu(ListVT & listVT) { // Nhap danh sach vat tu
 	VatTu vatTu;
-	for(;;) {
+	for (;;) {
 		// TH danh sach day
 		if (listVT.n > MAX_VAT_TU)
 		{
@@ -415,7 +447,7 @@ void NhapVatTu(ListVT &listVT) { // Nhap danh sach vat tu
 	};
 }
 
-void XoaVatTu(ListVT& listVT) {
+void XoaVatTu(ListVT & listVT) {
 	string maVatTu;
 	for (;;) {
 		clrscr(); // Xoa man hinh
@@ -436,7 +468,7 @@ void XoaVatTu(ListVT& listVT) {
 	}
 }
 
-void HieuChinhVatTu(ListVT& listVT) {
+void HieuChinhVatTu(ListVT & listVT) {
 	VatTu vatTu;
 	for (;;) {
 		clrscr(); // Xoa man hinh
@@ -454,21 +486,9 @@ void HieuChinhVatTu(ListVT& listVT) {
 			cin >> vatTu.donViTinh;
 			cout << "So luong ton moi: ";
 
-			// Xu ly nhap so luong ton khac float
-			cin >> vatTu.soLuongTon;
-			if (cin.fail()) {
-				BaoLoi("Vui long chi nhap so thuc.");
-			}
-			while (cin.fail()) {
-				cin.clear();
-				cin.ignore();
-				cin >> vatTu.soLuongTon;
-			}
-
 			// Sua thong tin trong bo nho
 			listVT.list[viTri]->tenVatTu = vatTu.tenVatTu;
 			listVT.list[viTri]->donViTinh = vatTu.donViTinh;
-			listVT.list[viTri]->soLuongTon = vatTu.soLuongTon;
 
 			BaoLoi("Da hieu chinh vat tu");
 		}
@@ -483,7 +503,7 @@ void LietKeVatTu(ListVT listVT) { // Liệt kê vật tư theo tên tăng dần
 	_getch();
 }
 
-void ThemNhanVien(BSTNVRoot& listNV) {
+void ThemNhanVien(BSTNVRoot & listNV) {
 	NhanVien nhanVien;
 	string maNhanVien;
 	for (;;) {
@@ -523,7 +543,7 @@ void ThemNhanVien(BSTNVRoot& listNV) {
 	}
 }
 
-void XoaNhanVien(BSTNVRoot& listNV) {
+void XoaNhanVien(BSTNVRoot & listNV) {
 	string maNhanVien;
 	int iMaNhanVien;
 	for (;;) {
@@ -556,7 +576,7 @@ void XoaNhanVien(BSTNVRoot& listNV) {
 	}
 }
 
-void HieuChinhNhanVien(BSTNVRoot& listNV) {
+void HieuChinhNhanVien(BSTNVRoot & listNV) {
 	NhanVien nhanVien;
 	string maNhanVien;
 	for (;;) {
@@ -609,19 +629,207 @@ void InNhanVien(BSTNVRoot listNV) {
 	_getch();
 }
 
+void NhapNgay(Ngay & ngay) {
+	cout << "Nhap ngay: ";
+	cin >> ngay.ngay;
+	cout << "Nhap thang: ";
+	cin >> ngay.thang;
+	cout << "Nhap nam: ";
+	cin >> ngay.nam;
+}
 
+void LapHoaDon(LListHD listHD, BSTNVRoot listNV, ListVT listVT) {
+	HoaDon hoaDon;
+	char loaiHoaDon;
+	int iMaNhanVien;
+	string maNhanVien;
+	for (;;) {
+		// TH danh sach day
+		if (hoaDon.listCTHD.n >= MAX_CTHD)
+		{
+			BaoLoi("Danh sach day");
+			break;
+		}
+
+		clrscr(); // Xoa man hinh
+		// Nhap du lieu
+		cout << "Nhap ma nhan vien (Nhap X de ket thuc): ";
+		cin >> maNhanVien;
+
+		// Thoat neu nhap x
+		if (maNhanVien == "X" || maNhanVien == "x")
+			return;
+
+		// Kiểm tra và chuyển dữ liệu nhập  (Mã nhân viên)
+		try {
+			iMaNhanVien = stoi(maNhanVien);
+		}
+		catch (invalid_argument e) {
+			BaoLoi("Vui long chi nhap so cho ma nhan vien");
+			continue;
+		}
+
+		// Tìm nhân viên trong danh sách
+		BSTNVNode* nodeNhanVien = TimNodeBSTNV(listNV, iMaNhanVien);
+		if (nodeNhanVien == NULL) {
+			BaoLoi("Ma nhan vien khong ton tai");
+			continue;
+		}
+
+		cout << "Nhap so hoa don: ";
+		cin >> hoaDon.soHoaDon;
+
+		do {
+			cout << "Nhap loai hoa don (N: nhap, X: xuat): ";
+			cin >> hoaDon.loai;
+			if (hoaDon.loai != 'X' && hoaDon.loai != 'N')
+				BaoLoi("Vui long chi nhap N hoac X cho loai hoa don.");
+		} while (hoaDon.loai != 'X' && hoaDon.loai != 'N');
+
+		cout << "Nhap ngay lap: " << endl;
+		NhapNgay(hoaDon.ngayLap);
+
+		hoaDon.listCTHD.n = 0;
+
+		for (;;) {
+			ChiTietHoaDon cthd;
+
+			clrscr(); // Xoa man hinh
+			cout << "So vat tu da nhap: " << hoaDon.listCTHD.n << endl;
+			// Nhap du lieu
+			cout << "Nhap ma vat tu (Nhap X de ket thuc): ";
+			cin >> cthd.maVatTu;
+
+			// Thoat neu nhap x
+			if (cthd.maVatTu == "X" || cthd.maVatTu == "x")
+				break;
+
+			// Kiem tra trung ma vat tu
+			int viTri = TimVatTuTheoMa(listVT, cthd.maVatTu);
+			if (viTri == -1) {
+				BaoLoi("Vat tu khong ton tai");
+				continue;
+			}
+
+			// Trạng thái
+			if (hoaDon.loai == 'N')
+				cthd.trangThai = 0;
+			else if (hoaDon.loai == 'X')
+				cthd.trangThai = 1;
+
+			// Kiểm tra dữ liệu nhập (số lượng)
+			do {
+				cin.clear();
+				cin.ignore();
+				cout << "Nhap so luong: ";
+				cin >> cthd.soLuong;
+
+				// Kiểm tra nhập số nguyên
+				if (cin.fail()) {
+					BaoLoi("Vui long chi nhap so nguyen.");
+					continue;
+				}
+
+				// Kiểm tra số lượng tồn
+				if (cthd.soLuong > listVT.list[viTri]->soLuongTon && cthd.trangThai == 1)
+					BaoLoi("So luong ton khong du.");
+			} while (cin.fail() || cthd.soLuong > listVT.list[viTri]->soLuongTon);
+
+			// Kiểm tra dữ liệu nhập (đơn giá)
+			do {
+				cin.clear();
+				cin.ignore();
+				cout << "Nhap don gia: ";
+				cin >> cthd.donGia;
+
+				if (cin.fail())
+					BaoLoi("Vui long chi nhap so nguyen.");
+			} while (cin.fail());
+
+			// Kiểm tra dữ liệu nhập (VAT)
+			do {
+				cin.clear();
+				cin.ignore();
+				cout << "Nhap VAT (%): ";
+				cin >> cthd.VAT;
+
+				if (cin.fail())
+					BaoLoi("Vui long chi nhap so thuc.");
+			} while (cin.fail());
+
+			int i = hoaDon.listCTHD.n;
+			hoaDon.listCTHD.list[i] = cthd;
+
+			if (cthd.trangThai == 1)
+				listVT.list[viTri]->soLuongTon -= cthd.soLuong;
+			else
+				listVT.list[viTri]->soLuongTon += cthd.soLuong;
+
+			hoaDon.listCTHD.list[hoaDon.listCTHD.n] = cthd;
+			hoaDon.listCTHD.n++;
+		}
+
+		ThemNodeLListHD(nodeNhanVien->data.listHD, TaoNodeLListHD(hoaDon));
+	}
+}
+
+void TraHang(BSTNVRoot & listNV, ListVT listVT) {
+	int maNhanVien;
+	string soHoaDon;
+	BSTNVNode* nhanVien;
+	LListHDNode* hoaDon;
+
+	clrscr();
+	cout << "Nhap so hoa don: ";
+	cin >> soHoaDon;
+
+	nhanVien = TimNodeBSTNV(listNV, maNhanVien);
+	if (nhanVien == NULL)
+		BaoLoi("Khong tim thay nhan vien");
+
+	hoaDon = nhanVien->data.listHD;
+	while (hoaDon != NULL) {
+		cout << hoaDon->data.soHoaDon << endl;
+		hoaDon = hoaDon->pNext;
+	}
+
+	_getch();
+}
+
+void InHoaDon(BSTNVRoot listNV) {
+	int maNhanVien;
+	string soHoaDon;
+	BSTNVNode* nhanVien;
+	LListHDNode* hoaDon;
+
+	clrscr();
+	cout << "Nhap so hoa don: ";
+	cin >> soHoaDon;
+
+	hoaDon = TimNodeHDBSTNV(listNV, soHoaDon);
+	if (hoaDon == NULL)
+		BaoLoi("Khong tim thay hoa don");
+	cout << hoaDon->data.soHoaDon << " - " << hoaDon->data.ngayLap.ngay <<  "/" << hoaDon->data.ngayLap.thang << "/" << hoaDon->data.ngayLap.nam;
+
+	_getch();
+}
 
 int main() {
+	LListHD listHD = NULL;
 	ListVT listVT;
 	BSTNVRoot listNV = NULL;
 	listVT.n = 0;
 	int itemDaChon;
-	
+
+	LListHD hd;
+
 	for (;;) {
 		itemDaChon = ChonMenuChinh(listThucDon);
 		switch (itemDaChon)
 		{
 		case 1:
+			//Test0(hd);
+			//Test(hd);
 			NhapVatTu(listVT);
 			break;
 		case 2:
@@ -644,6 +852,15 @@ int main() {
 			break;
 		case 8:
 			InNhanVien(listNV);
+			break;
+		case 9:
+			LapHoaDon(listHD, listNV, listVT);
+			break;
+		case 10:
+			TraHang(listNV, listVT);
+			break;
+		case 11:
+			InHoaDon(listNV);
 			break;
 		case 15:
 			return 0;
