@@ -4,7 +4,7 @@
 // - kiểm tra ngày tháng năm
 
 // - kiểm tra nhập dữ liệu
-
+#define _CRT_SECURE_NO_WARNINGS
 
 #include <iostream>
 #include <string>
@@ -27,7 +27,7 @@ const int KEY_ENTER = 13;
 char listThucDon[SO_ITEM_MENU][50] = {  "--1.  Them vat tu",
 										"--2.  Xoa vat tu",
 										"--3.  Hieu Chinh Vat Tu",
-										"x-4.  Liet ke danh sach vat tu", // chưa liệt kê theo thứ tự yêu cầu
+										"x-4.  Liet ke danh sach vat tu",
 										"--5.  Them nhan vien",
 										"--6.  Xoa nhan vien",
 										"--7.  Hieu chinh nhan vien",
@@ -46,7 +46,7 @@ int cot = 10;
 
 // Danh sách thực đơn
 
-void BaoLoi(const char* s) { // Hàm thông báo lỗi
+void ThongBao(const char* s) { // Hàm thông báo lỗi
 	int x = wherex(), y = wherey();
 	gotoxy(10, 24);
 	cout << s;
@@ -188,7 +188,7 @@ void ThemNodeBSTNV(BSTNVRoot & L, BSTNVNode * node) {
 		else if (node->key > nodeCha->key)
 			nodeCha->pRight = node;
 		else
-			BaoLoi("Key da ton tai");
+			ThongBao("Key da ton tai");
 	}
 };
 
@@ -205,7 +205,7 @@ BSTNVRoot TimNodeBSTNV(BSTNVRoot & L, int key) {
 
 void XoaNodeBSTNV(BSTNVRoot & L, int key) {
 	if (L == NULL) {
-		BaoLoi("Cay rong");
+		ThongBao("Cay rong");
 		return;
 	}
 
@@ -227,7 +227,7 @@ void XoaNodeBSTNV(BSTNVRoot & L, int key) {
 		}
 	}
 	if (!timThayNode) {
-		BaoLoi("Key khong ton tai");
+		ThongBao("Key khong ton tai");
 		return;
 	}
 
@@ -282,6 +282,23 @@ void XoaNodeBSTNV(BSTNVRoot & L, int key) {
 	}
 }
 
+int SoPhanTuBSTNV(BSTNVRoot L) {
+	if (L == NULL)
+		return 0;
+	if (L->pLeft == NULL && L->pRight == NULL)
+		return 1;
+	return 1 + SoPhanTuBSTNV(L->pLeft) + SoPhanTuBSTNV(L->pRight);
+}
+
+void LayMangBSTNV(BSTNVRoot L, NhanVien* mangNV, int &n ) {
+	if (L != NULL) {
+		mangNV[n] = L->data;
+		n++;
+		LayMangBSTNV(L->pLeft, mangNV, n);
+		LayMangBSTNV(L->pRight, mangNV, n);
+	}
+}
+
 LListHDNode* TimNodeHDBSTNV(BSTNVRoot L, string key) {
 	if (L == NULL)
 		return NULL;
@@ -303,45 +320,6 @@ LListHDNode* TimNodeHDBSTNV(BSTNVRoot L, string key) {
 		return nodePhai;
 	return NULL;
 }
-
-//BSTNVRoot NodeNhoNhatBSTNV(BSTNVRoot& listNV) {
-//	BSTNVRoot tmp = listNV;
-//	while (tmp != NULL && tmp->pLeft != NULL)
-//		tmp = tmp->pLeft;
-//	return tmp;
-//}
-
-//BSTNVRoot XoaNodeBSTNV(BSTNVRoot& listNV, int key) {
-//	if (listNV == NULL)
-//		return listNV;
-//	if (key < listNV->key) // key nhỏ hơn key của node đang xét
-//		XoaNodeBSTNV(listNV->pLeft, key);
-//	else if (key > listNV->key) // key nhỏ hơn key của node đang xét
-//		XoaNodeBSTNV(listNV->pRight, key);
-//	else { // key = listNV->key: node hiện tại là node cần xoá
-//		// node có 1 con hoặc ko có node con
-//		if (listNV->pLeft == NULL) { // node trái null
-//			BSTNVRoot tmp = listNV->pRight;
-//			delete listNV;
-//			return tmp;
-//		} 
-//		if (listNV->pRight == NULL) { //node phải null
-//			BSTNVRoot tmp = listNV->pLeft;
-//			delete listNV;
-//			return tmp;
-//		}
-//		// node có đủ 2 node con
-//		BSTNVRoot tmp = NodeNhoNhatBSTNV(listNV->pRight);
-//		listNV->key = tmp->key;
-//		listNV->data = tmp->data;
-//		listNV->pRight = XoaNodeBSTNV(listNV->pRight, listNV->key);
-//	}
-//	return listNV;
-//}
-
-// ++ End nhân viên ++ //
-
-// ----------------- Các hàm chức năng ----------------- //
 
 void Normal() {
 	SetColor(15);
@@ -401,10 +379,10 @@ int TimVatTuTheoMa(ListVT listVT, string maVatTu) { // Tìm vị trí vật tư 
 void NhapVatTu(ListVT & listVT) { // Nhap danh sach vat tu
 	VatTu vatTu;
 	for (;;) {
-		// TH danh sach day
+		// TH danh sách đầy
 		if (listVT.n > MAX_VAT_TU)
 		{
-			BaoLoi("Danh sach day");
+			ThongBao("Danh sach day");
 			return;
 		}
 
@@ -412,34 +390,39 @@ void NhapVatTu(ListVT & listVT) { // Nhap danh sach vat tu
 		cout << "So vat tu da nhap: " << listVT.n << endl;
 		// Nhap du lieu
 		cout << "Nhap ma vat tu (Nhap X de ket thuc): ";
-		cin >> vatTu.maVatTu;
+		getline(cin, vatTu.maVatTu);
 
 		// Thoat neu nhap x
 		if (vatTu.maVatTu == "X" || vatTu.maVatTu == "x")
 			return;
 
+		// Kiểm tra chiều dài mã vật tư
+		if (vatTu.maVatTu.length() > 10) {
+			ThongBao("Ma vat tu co toi da 10 ki tu");
+			continue;
+		}
+
 		// Kiem tra trung ma vat tu
 		if (TimVatTuTheoMa(listVT, vatTu.maVatTu) != -1) {
-			BaoLoi("Trung ma vat tu");
+			ThongBao("Trung ma vat tu");
 			continue;
 		}
 
 		cout << "Nhap ten vat tu: ";
-		cin >> vatTu.tenVatTu;
+		getline(cin, vatTu.tenVatTu);
 		cout << "Don vi tinh: ";
-		cin >> vatTu.donViTinh;
+		getline(cin, vatTu.donViTinh);
 		cout << "So luong ton: ";
 
 		// Xu ly nhap so luong ton khac float
 		cin >> vatTu.soLuongTon;
-		if (cin.fail()) {
-			BaoLoi("Vui long chi nhap so thuc.");
-		}
 		while (cin.fail()) {
+			ThongBao("Vui long chi nhap so thuc.");
 			cin.clear();
 			cin.ignore();
 			cin >> vatTu.soLuongTon;
 		}
+		cin.ignore();
 
 		// Them vao danh sach
 		listVT.list[listVT.n] = new VatTu(vatTu);
@@ -452,18 +435,25 @@ void XoaVatTu(ListVT & listVT) {
 	for (;;) {
 		clrscr(); // Xoa man hinh
 		cout << "Nhap ma vat tu can xoa (Nhap X de thoat): ";
-		cin >> maVatTu;
+		getline(cin, maVatTu);
+
+		// Kiểm tra chiều dài mã vật tư
+		if (maVatTu.length() != 10) {
+			ThongBao("Ma vat tu phai co 10 ki tu");
+			continue;
+		}
+
 		if (maVatTu == "X" || maVatTu == "x")
 			return;
 		int viTri = TimVatTuTheoMa(listVT, maVatTu);
-		if (viTri == -1)
-			BaoLoi("Khong tim thay ma vat tu");
-		else {
+		if (viTri == -1) // Tim thay
+			ThongBao("Khong tim thay ma vat tu");
+		else { // Khong tim thay
 			delete listVT.list[viTri];
 			for (int i = viTri; i < listVT.n - 1; i++)
 				listVT.list[i] = listVT.list[i + 1];
 			listVT.n--;
-			BaoLoi("Da xoa vat tu");
+			ThongBao("Da xoa vat tu");
 		}
 	}
 }
@@ -473,33 +463,62 @@ void HieuChinhVatTu(ListVT & listVT) {
 	for (;;) {
 		clrscr(); // Xoa man hinh
 		cout << "Nhap ma vat tu can hieu chinh (Nhap X de thoat): ";
-		cin >> vatTu.maVatTu;
+		getline(cin, vatTu.maVatTu);
+
+		// Kiểm tra chiều dài mã vật tư
+		if (vatTu.maVatTu.length() > 10) {
+			ThongBao("Ma vat tu co toi da 10 ki tu");
+			continue;
+		}
+
 		if (vatTu.maVatTu == "X" || vatTu.maVatTu == "x")
 			return;
-		int viTri = TimVatTuTheoMa(listVT, vatTu.maVatTu);
-		if (viTri == -1)
-			BaoLoi("Khong tim thay ma vat tu");
-		else {
-			cout << "Nhap ten vat tu moi: ";
-			cin >> vatTu.tenVatTu;
-			cout << "Don vi tinh moi: ";
-			cin >> vatTu.donViTinh;
-			cout << "So luong ton moi: ";
 
+		int viTri = TimVatTuTheoMa(listVT, vatTu.maVatTu);
+		if (viTri == -1) // Tim thay
+			ThongBao("Khong tim thay ma vat tu");
+		else { // Khong tim thay
+			cout << "Nhap ten vat tu moi: ";
+			getline(cin, vatTu.tenVatTu);
+			cout << "Don vi tinh moi: ";
+			getline(cin, vatTu.donViTinh);
+			
 			// Sua thong tin trong bo nho
 			listVT.list[viTri]->tenVatTu = vatTu.tenVatTu;
 			listVT.list[viTri]->donViTinh = vatTu.donViTinh;
 
-			BaoLoi("Da hieu chinh vat tu");
+			ThongBao("Da hieu chinh vat tu");
 		}
 	}
 }
 
 void LietKeVatTu(ListVT listVT) { // Liệt kê vật tư theo tên tăng dần
 	clrscr(); // Xoa man hinh
-	cout << "Ma vat tu" << setw(14) << "Ten vat tu" << setw(14) << "Don vi tinh" << setw(16) << "So luong ton" << endl;
-	for (int i = 0; i < listVT.n; i++)
-		cout << listVT.list[i]->maVatTu << setw(13) << listVT.list[i]->tenVatTu << setw(13) << listVT.list[i]->donViTinh << setw(15) << listVT.list[i]->soLuongTon << endl;
+	ListVT listTam;
+	
+	// Copy danh sach con tro cac vat tu
+	listTam.n = listVT.n;
+	for (int i = 0; i < listTam.n; i++)
+		listTam.list[i] = listVT.list[i];
+
+	// Sap xep
+	for (int i = 0; i < listTam.n; i++)
+		for (int j = i + 1; j < listTam.n; j++)
+			if (listTam.list[i]->tenVatTu.compare(listTam.list[j]->tenVatTu) > 0) {
+				VatTu* vatTu = listTam.list[i];
+				listTam.list[i] = listTam.list[j];
+				listTam.list[j] = vatTu;
+			}
+
+	cout << left << setw(16) << "Ma vat tu" 
+		<< left << setw(16) << "Ten vat tu" 
+		<< left << setw(16) << "Don vi tinh" 
+		<< left << setw(16) << "So luong ton" << endl;
+	for (int i = 0; i < listTam.n; i++)
+		cout << left << setw(16) << listTam.list[i]->maVatTu 
+			<< left << setw(16) << listTam.list[i]->tenVatTu 
+			<< left << setw(16) << listTam.list[i]->donViTinh 
+			<< left << setw(16) << listTam.list[i]->soLuongTon << endl;
 	_getch();
 }
 
@@ -510,7 +529,7 @@ void ThemNhanVien(BSTNVRoot & listNV) {
 		clrscr(); // Xoa man hinh
 		// Nhap du lieu
 		cout << "Nhap ma nhan vien (Nhap X de ket thuc): ";
-		cin >> maNhanVien;
+		getline(cin, maNhanVien);
 
 		// Thoat neu nhap x
 		if (maNhanVien == "X" || maNhanVien == "x")
@@ -521,20 +540,20 @@ void ThemNhanVien(BSTNVRoot & listNV) {
 			nhanVien.maNhanVien = stoi(maNhanVien);
 		}
 		catch (invalid_argument e) {
-			BaoLoi("Vui long chi nhap so cho ma nhan vien");
+			ThongBao("Vui long chi nhap so cho ma nhan vien");
 			continue;
 		}
 
 		// Kiem tra trung ma nhan vien
 		if (TimNodeBSTNV(listNV, nhanVien.maNhanVien) != NULL) {
-			BaoLoi("Trung ma nhan vien");
+			ThongBao("Trung ma nhan vien");
 			continue;
 		}
 
 		cout << "Nhap ho: ";
-		cin >> nhanVien.ho;
+		getline(cin, nhanVien.ho);
 		cout << "Nhap ten: ";
-		cin >> nhanVien.ten;
+		getline(cin, nhanVien.ten);
 
 		nhanVien.listHD = NULL;
 
@@ -550,7 +569,7 @@ void XoaNhanVien(BSTNVRoot & listNV) {
 		clrscr(); // Xoa man hinh
 		// Nhap du lieu
 		cout << "Nhap ma nhan vien can xoa (Nhap X de ket thuc): ";
-		cin >> maNhanVien;
+		getline(cin, maNhanVien);
 
 		// Thoat neu nhap x
 		if (maNhanVien == "X" || maNhanVien == "x")
@@ -561,13 +580,13 @@ void XoaNhanVien(BSTNVRoot & listNV) {
 			iMaNhanVien = stoi(maNhanVien);
 		}
 		catch (invalid_argument e) {
-			BaoLoi("Vui long chi nhap so cho ma nhan vien");
+			ThongBao("Vui long chi nhap so cho ma nhan vien");
 			continue;
 		}
 
 		// Kiem tra ton tai ma nhan vien
-		if (false) {
-			BaoLoi("Ma nhan vien khong ton tai");
+		if (TimNodeBSTNV(listNV, iMaNhanVien) == NULL) {
+			ThongBao("Ma nhan vien khong ton tai");
 			continue;
 		}
 
@@ -583,7 +602,7 @@ void HieuChinhNhanVien(BSTNVRoot & listNV) {
 		clrscr(); // Xoa man hinh
 		// Nhap du lieu
 		cout << "Nhap ma nhan vien can hieu chinh (Nhap X de ket thuc): ";
-		cin >> maNhanVien;
+		getline(cin, maNhanVien);
 
 		// Thoat neu nhap x
 		if (maNhanVien == "X" || maNhanVien == "x")
@@ -594,48 +613,166 @@ void HieuChinhNhanVien(BSTNVRoot & listNV) {
 			nhanVien.maNhanVien = stoi(maNhanVien);
 		}
 		catch (invalid_argument e) {
-			BaoLoi("Vui long chi nhap so cho ma nhan vien");
+			ThongBao("Vui long chi nhap so cho ma nhan vien");
 			continue;
 		}
 
 		BSTNVNode* node = TimNodeBSTNV(listNV, nhanVien.maNhanVien);
 		if (node == NULL) {
-			BaoLoi("Ma nhan vien khong ton tai");
+			ThongBao("Ma nhan vien khong ton tai");
 			continue;
 		}
 
 		cout << "Nhap ho moi: ";
-		cin >> nhanVien.ho;
+		getline(cin, nhanVien.ho);
 		cout << "Nhap ten moi: ";
-		cin >> nhanVien.ten;
+		getline(cin, nhanVien.ten);
 
 		node->data.ho = nhanVien.ho;
 		node->data.ten = nhanVien.ten;
 	}
 }
 
-void DuyetNhanVien(BSTNVRoot listNV) {
-	if (listNV != NULL) {
-		DuyetNhanVien(listNV->pLeft);
-		cout << listNV->data.maNhanVien << setw(13) << listNV->data.ho << setw(13) << listNV->data.ten << endl;
-		DuyetNhanVien(listNV->pRight);
-	}
-}
-
 void InNhanVien(BSTNVRoot listNV) {
+	int n = 0;
+	int m = 0;
+
+	// Copy danh sach nhan vien
+	NhanVien* mangNV = new NhanVien[SoPhanTuBSTNV(listNV)];
+	LayMangBSTNV(listNV, mangNV, n);
+	
+
+	// Sap xep ten tang dan va ho tang dan
+	for (int i = 0; i < n; i++)
+		for (int j = 0; j < n; j++) {
+			if (mangNV[i].ten.compare(mangNV[j].ten) < 0) {
+				NhanVien nvTam = mangNV[i];
+				mangNV[i] = mangNV[j];
+				mangNV[j] = nvTam;
+			}
+			else if (mangNV[i].ten.compare(mangNV[j].ten) == 0)
+				if (mangNV[i].ho.compare(mangNV[j].ho) < 0) {
+					NhanVien nvTam = mangNV[i];
+					mangNV[i] = mangNV[j];
+					mangNV[j] = nvTam;
+				}
+		}
+
+	// Xuat ra man hinh
 	clrscr(); // Xoa man hinh
-	cout << "Ma nhan vien" << setw(14) << "Ho" << setw(14) << "Ten" << endl;
-	DuyetNhanVien(listNV);
+	cout << left << setw(20) << "Ma nhan vien" 
+		<< left << setw(20) << "Ho" 
+		<< left << setw(20) << "Ten" << endl;
+	for (int i = 0; i < n; i++) {
+		cout << left << setw(20) << mangNV[i].maNhanVien
+			<< left << setw(20) << mangNV[i].ho
+			<< left << setw(20) << mangNV[i].ten << endl;
+	}
+
 	_getch();
 }
 
+bool NamNhuan(int nam)
+{
+	return(((nam % 4 == 0) && (nam % 100 != 0)) || (nam % 400 == 0));
+}
+
+bool NgayHopLe(Ngay ngay)
+{
+	int ngayTrongThang[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+	if (ngay.thang < 0 || ngay.thang > 12)
+		return false;
+
+	//Năm nhuận tháng 2 29 ngày:
+	if (NamNhuan(ngay.nam))
+		ngayTrongThang[1]++;
+
+	return(ngay.ngay > 0 && ngay.ngay <= ngayTrongThang[ngay.thang - 1]);
+}
+
+// http://mathforum.org/library/drmath/view/66535.html
+int TongSoNgay(Ngay ngay) { // Tinh tong so ngay so voi 0/00/0000
+	if (ngay.thang < 3) {
+		ngay.nam--;
+		ngay.thang += 12;
+	}
+	return 365 * ngay.nam + ngay.nam / 4 - ngay.nam / 100 + ngay.nam / 400 + (153 * ngay.thang - 457) / 5 + ngay.ngay - 306;
+}
+
+int KhoangCachNgay(Ngay ngay1, Ngay ngay2) { // Tinh khoang cach so ngay giua 2 ngay
+	return TongSoNgay(ngay2) - TongSoNgay(ngay1);
+}
+
+Ngay NgayHienTai() {
+	Ngay ngay;
+
+	time_t rawtime;
+	struct tm* timeinfo;
+	time(&rawtime);
+	timeinfo = localtime(&rawtime);
+	
+	ngay.ngay = timeinfo->tm_mday;
+	ngay.thang = timeinfo->tm_mon + 1;
+	ngay.nam = timeinfo->tm_year + 1900;
+
+	return ngay;
+}
+
 void NhapNgay(Ngay & ngay) {
-	cout << "Nhap ngay: ";
-	cin >> ngay.ngay;
-	cout << "Nhap thang: ";
-	cin >> ngay.thang;
-	cout << "Nhap nam: ";
-	cin >> ngay.nam;
+	for (;;) {
+		do {
+			cin.clear();
+			cin.ignore();
+			cout << "Nhap ngay: ";
+			cin >> ngay.ngay;
+
+			// Kiểm tra
+			if (cin.fail() || ngay.ngay < 1 || ngay.ngay > 31) {
+				ThongBao("Vui long nhap ngay tu 1 den 31.");
+				continue;
+			}
+		} while (cin.fail() || ngay.ngay < 1 || ngay.ngay > 31);
+
+		do {
+			cin.clear();
+			cin.ignore();
+			cout << "Nhap thang: ";
+			cin >> ngay.thang;
+
+			// Kiểm tra
+			if (cin.fail() || ngay.thang < 1 || ngay.thang > 12) {
+				ThongBao("Vui long nhap thang tu 1 den 12.");
+				continue;
+			}
+		} while (cin.fail() || ngay.thang < 1 || ngay.thang > 12);
+
+		do {
+			cin.clear();
+			cin.ignore();
+			cout << "Nhap nam: ";
+			cin >> ngay.nam;
+
+			// Kiểm tra
+			if (cin.fail()) {
+				ThongBao("Vui long nhap so nguyen");
+				continue;
+			}
+		} while (cin.fail());
+
+		// Ngay thang khong hop le
+		if (!NgayHopLe(ngay)) {
+			ThongBao("Ngay nhap khong hop le");
+			continue;
+		}
+
+		// Ngay thang trong tuong lai
+		if (KhoangCachNgay(ngay, NgayHienTai()) < 0) {
+			ThongBao("Ngay nhap vuot qua ngay hien tai.");
+			continue;
+		}
+
+		break;
+	};
 }
 
 void LapHoaDon(LListHD listHD, BSTNVRoot listNV, ListVT listVT) {
@@ -647,14 +784,14 @@ void LapHoaDon(LListHD listHD, BSTNVRoot listNV, ListVT listVT) {
 		// TH danh sach day
 		if (hoaDon.listCTHD.n >= MAX_CTHD)
 		{
-			BaoLoi("Danh sach day");
+			ThongBao("Danh sach day");
 			break;
 		}
 
 		clrscr(); // Xoa man hinh
 		// Nhap du lieu
 		cout << "Nhap ma nhan vien (Nhap X de ket thuc): ";
-		cin >> maNhanVien;
+		getline(cin, maNhanVien);
 
 		// Thoat neu nhap x
 		if (maNhanVien == "X" || maNhanVien == "x")
@@ -665,25 +802,25 @@ void LapHoaDon(LListHD listHD, BSTNVRoot listNV, ListVT listVT) {
 			iMaNhanVien = stoi(maNhanVien);
 		}
 		catch (invalid_argument e) {
-			BaoLoi("Vui long chi nhap so cho ma nhan vien");
+			ThongBao("Vui long chi nhap so cho ma nhan vien");
 			continue;
 		}
 
 		// Tìm nhân viên trong danh sách
 		BSTNVNode* nodeNhanVien = TimNodeBSTNV(listNV, iMaNhanVien);
 		if (nodeNhanVien == NULL) {
-			BaoLoi("Ma nhan vien khong ton tai");
+			ThongBao("Ma nhan vien khong ton tai");
 			continue;
 		}
 
 		cout << "Nhap so hoa don: ";
-		cin >> hoaDon.soHoaDon;
+		getline(cin, hoaDon.soHoaDon);
 
 		do {
 			cout << "Nhap loai hoa don (N: nhap, X: xuat): ";
 			cin >> hoaDon.loai;
 			if (hoaDon.loai != 'X' && hoaDon.loai != 'N')
-				BaoLoi("Vui long chi nhap N hoac X cho loai hoa don.");
+				ThongBao("Vui long chi nhap N hoac X cho loai hoa don.");
 		} while (hoaDon.loai != 'X' && hoaDon.loai != 'N');
 
 		cout << "Nhap ngay lap: " << endl;
@@ -707,15 +844,12 @@ void LapHoaDon(LListHD listHD, BSTNVRoot listNV, ListVT listVT) {
 			// Kiem tra trung ma vat tu
 			int viTri = TimVatTuTheoMa(listVT, cthd.maVatTu);
 			if (viTri == -1) {
-				BaoLoi("Vat tu khong ton tai");
+				ThongBao("Vat tu khong ton tai");
 				continue;
 			}
 
 			// Trạng thái
-			if (hoaDon.loai == 'N')
-				cthd.trangThai = 0;
-			else if (hoaDon.loai == 'X')
-				cthd.trangThai = 1;
+			cthd.trangThai = 1;
 
 			// Kiểm tra dữ liệu nhập (số lượng)
 			do {
@@ -726,13 +860,13 @@ void LapHoaDon(LListHD listHD, BSTNVRoot listNV, ListVT listVT) {
 
 				// Kiểm tra nhập số nguyên
 				if (cin.fail()) {
-					BaoLoi("Vui long chi nhap so nguyen.");
+					ThongBao("Vui long chi nhap so nguyen.");
 					continue;
 				}
 
 				// Kiểm tra số lượng tồn
 				if (cthd.soLuong > listVT.list[viTri]->soLuongTon && cthd.trangThai == 1)
-					BaoLoi("So luong ton khong du.");
+					ThongBao("So luong ton khong du.");
 			} while (cin.fail() || cthd.soLuong > listVT.list[viTri]->soLuongTon);
 
 			// Kiểm tra dữ liệu nhập (đơn giá)
@@ -743,7 +877,7 @@ void LapHoaDon(LListHD listHD, BSTNVRoot listNV, ListVT listVT) {
 				cin >> cthd.donGia;
 
 				if (cin.fail())
-					BaoLoi("Vui long chi nhap so nguyen.");
+					ThongBao("Vui long chi nhap so nguyen.");
 			} while (cin.fail());
 
 			// Kiểm tra dữ liệu nhập (VAT)
@@ -754,13 +888,13 @@ void LapHoaDon(LListHD listHD, BSTNVRoot listNV, ListVT listVT) {
 				cin >> cthd.VAT;
 
 				if (cin.fail())
-					BaoLoi("Vui long chi nhap so thuc.");
+					ThongBao("Vui long chi nhap so thuc.");
 			} while (cin.fail());
 
 			int i = hoaDon.listCTHD.n;
 			hoaDon.listCTHD.list[i] = cthd;
 
-			if (cthd.trangThai == 1)
+			if (hoaDon.loai == 'X')
 				listVT.list[viTri]->soLuongTon -= cthd.soLuong;
 			else
 				listVT.list[viTri]->soLuongTon += cthd.soLuong;
@@ -776,24 +910,75 @@ void LapHoaDon(LListHD listHD, BSTNVRoot listNV, ListVT listVT) {
 void TraHang(BSTNVRoot & listNV, ListVT listVT) {
 	int maNhanVien;
 	string soHoaDon;
-	BSTNVNode* nhanVien;
 	LListHDNode* hoaDon;
 
+	for (;;) {
+		clrscr();
+		cout << "Nhap so hoa don (Nhap X de thoat): ";
+		getline(cin, soHoaDon);
+		if (soHoaDon == "x" || soHoaDon == "X")
+			return;
+		hoaDon = TimNodeHDBSTNV(listNV, soHoaDon);
+		
+		if (hoaDon == NULL) {
+			ThongBao("Ma hoa don khong ton tai");
+			continue;
+		}
+
+		if (KhoangCachNgay(hoaDon->data.ngayLap, NgayHienTai()) > 3) {
+			ThongBao("Da qua han tra hang");
+			continue;
+		}
+
+		break;
+	};
+
 	clrscr();
-	cout << "Nhap so hoa don: ";
-	cin >> soHoaDon;
-
-	nhanVien = TimNodeBSTNV(listNV, maNhanVien);
-	if (nhanVien == NULL)
-		BaoLoi("Khong tim thay nhan vien");
-
-	hoaDon = nhanVien->data.listHD;
-	while (hoaDon != NULL) {
-		cout << hoaDon->data.soHoaDon << endl;
-		hoaDon = hoaDon->pNext;
+	cout << left << setw(10) << "STT"
+		<< left << setw(20) << "Ma vat tu"
+		<< left << setw(20) << "So luong"
+		<< left << setw(20) << "So luong"
+		<< left << setw(20) << "VAT"
+		<< left << setw(20) << "Trang thai" << endl;
+	for (int i = 0; i < hoaDon->data.listCTHD.n; i++) {
+		ChiTietHoaDon cthd = hoaDon->data.listCTHD.list[i];
+		cout << left << setw(10) << i + 1
+			<< left << setw(20) << cthd.maVatTu
+			<< left << setw(20) << cthd.soLuong
+			<< left << setw(20) << cthd.donGia
+			<< left << setw(20) << cthd.VAT
+			<< left << setw(20) << cthd.trangThai << endl;
 	}
 
-	_getch();
+	string stt;
+	cout << "Nhap so thu tu hang hoa muon tra (Nhap X de ket thuc): ";
+	for (;;) {
+		cin >> stt;
+		if (stt == "x" || stt == "X")
+			return;
+		
+		int istt;
+		try {
+			istt = stoi(stt);
+		}
+		catch (invalid_argument e) {
+			ThongBao("STT khong hop le");
+			continue;
+		}
+
+		if (istt < 1 || istt > hoaDon->data.listCTHD.n) {
+			ThongBao("STT khong hop le");
+			continue;
+		}
+
+		if (hoaDon->data.listCTHD.list[istt - 1].trangThai == 0) {
+			ThongBao("Hang hoa da duoc tra truoc do.");
+			continue;
+		}
+
+		hoaDon->data.listCTHD.list[istt - 1].trangThai = 0;
+	}
+	ThongBao("Da tra hang");
 }
 
 void InHoaDon(BSTNVRoot listNV) {
@@ -808,10 +993,65 @@ void InHoaDon(BSTNVRoot listNV) {
 
 	hoaDon = TimNodeHDBSTNV(listNV, soHoaDon);
 	if (hoaDon == NULL)
-		BaoLoi("Khong tim thay hoa don");
-	cout << hoaDon->data.soHoaDon << " - " << hoaDon->data.ngayLap.ngay <<  "/" << hoaDon->data.ngayLap.thang << "/" << hoaDon->data.ngayLap.nam;
+		ThongBao("Khong tim thay hoa don");
+
+	cout << "So hoa don: " << hoaDon->data.soHoaDon << endl
+		<< "Ngay lap: " << hoaDon->data.ngayLap.ngay << "/" << hoaDon->data.ngayLap.thang << "/" << hoaDon->data.ngayLap.nam << endl
+		<< "Loai: " << hoaDon->data.loai << endl << endl;
+
+	cout << left << setw(10) << "STT"
+		<< left << setw(20) << "Ma vat tu"
+		<< left << setw(20) << "So luong"
+		<< left << setw(20) << "So luong"
+		<< left << setw(20) << "VAT"
+		<< left << setw(20) << "Trang thai" << endl;
+	for (int i = 0; i < hoaDon->data.listCTHD.n; i++) {
+		ChiTietHoaDon cthd = hoaDon->data.listCTHD.list[i];
+		cout << left << setw(10) << i + 1
+			<< left << setw(20) << cthd.maVatTu
+			<< left << setw(20) << cthd.soLuong
+			<< left << setw(20) << cthd.donGia
+			<< left << setw(20) << cthd.VAT
+			<< left << setw(20) << cthd.trangThai << endl;
+	}
 
 	_getch();
+}
+
+void LietKeHoaDon(BSTNVRoot listNV) {
+	string maNhanVien;
+	int iMaNhanVien;
+	Ngay ngayBT;
+	Ngay ngayKT;
+
+	for (;;) {
+		clrscr(); // Xoa man hinh
+		// Nhap du lieu
+		cout << "Nhap ma nhan vien (Nhap X de ket thuc): ";
+		getline(cin, maNhanVien);
+
+		// Thoat neu nhap x
+		if (maNhanVien == "X" || maNhanVien == "x")
+			return;
+
+		// Kiểm tra và chuyển dữ liệu nhập  (Mã nhân viên)
+		try {
+			iMaNhanVien = stoi(maNhanVien);
+		}
+		catch (invalid_argument e) {
+			ThongBao("Vui long chi nhap so cho ma nhan vien");
+			continue;
+		}
+
+		// Tìm nhân viên trong danh sách
+		BSTNVNode* nodeNhanVien = TimNodeBSTNV(listNV, iMaNhanVien);
+		if (nodeNhanVien == NULL) {
+			ThongBao("Ma nhan vien khong ton tai");
+			continue;
+		}
+
+		
+	}
 }
 
 int main() {
@@ -828,8 +1068,6 @@ int main() {
 		switch (itemDaChon)
 		{
 		case 1:
-			//Test0(hd);
-			//Test(hd);
 			NhapVatTu(listVT);
 			break;
 		case 2:
@@ -866,7 +1104,7 @@ int main() {
 			return 0;
 			break;
 		default:
-			BaoLoi("Chuc nang chua hoan thanh");
+			ThongBao("Chuc nang chua hoan thanh");
 			break;
 		}
 	}
