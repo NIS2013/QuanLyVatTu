@@ -1217,8 +1217,7 @@ void LoadDuLieu(ListVT &listVT, BSTNVRoot &listNV) {
 		ThemNodeBSTNV(listNV, TaoNodeBSTNV(nhanVien));
 	}
 
-	cout << "Da load";
-	_getch();
+	ThongBao("Da load");
 }
 
 void LuuDuLieu(ListVT listVT, BSTNVRoot listNV) {
@@ -1269,44 +1268,7 @@ void LuuDuLieu(ListVT listVT, BSTNVRoot listNV) {
 		}
 	}
 
-	cout << "Da luu";
-	_getch();
-}
-
-void SaveFile(ListVT& listVT, BSTNVRoot& listNV) {
-	FILE* f;
-	if ((f = fopen("vattu.txt", "wb")) == NULL)
-	{
-		ThongBao("Loi mo file de ghi"); return;
-	}
-	for (int i = 0; i < listVT.n; i++)
-		fwrite(listVT.list[i], sizeof(VatTu), 1, f);
-	fclose(f);
-	ThongBao("Da ghi xong danh sach vao file");
-
-}
-void OpenFile(ListVT& listVT, BSTNVRoot& listNV) {
-	FILE* f;
-
-	if ((f = fopen("vattu.txt", "rb")) == NULL)
-	{
-		ThongBao("Loi mo file de doc"); return;
-	}
-
-	listVT.n = 0;
-	if (fread(listVT.list[listVT.n], sizeof(VatTu), 1, f) != 1) {
-		cout << "loi";
-		system("pause");
-	}
-
-	while (fread(listVT.list[listVT.n], sizeof(VatTu), 1, f) != 1) {
-		cout << "toi day";
-		system("pause");
-		listVT.n++;
-	}
-
-	fclose(f);
-	ThongBao("Da load xong danh sach vao bo nho");
+	ThongBao("Da load");
 }
 
 int main() {
