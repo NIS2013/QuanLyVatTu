@@ -7,6 +7,7 @@
 #include <iostream>
 #include <string>
 #include <iomanip>
+#include <fstream>
 
 #include "mylib.h"
 
@@ -136,6 +137,15 @@ LListHDNode* TimNodeLListHD(LListHD L, string maHoaDon) { // Tìm node trong DS
 		else
 			L = L->pNext;
 	return NULL;
+}
+
+int SoPhanTuLListHD(LListHD L) {
+	int n = 0;
+	while (L != NULL) {
+		n++;
+		L = L->pNext;
+	}
+	return n;
 }
 
 // +++ End hoá đơn +++++ //
@@ -400,8 +410,8 @@ void NhapVatTu(ListVT & listVT) { // Nhap danh sach vat tu
 			return;
 
 		// Kiểm tra chiều dài mã vật tư
-		if (vatTu.maVatTu.length() > 10) {
-			ThongBao("Ma vat tu co toi da 10 ki tu");
+		if (vatTu.maVatTu.length() > 10 || vatTu.maVatTu.length() == 0) {
+			ThongBao("Ma vat tu co toi da 10 ki tu va toi thieu 1 ki tu");
 			continue;
 		}
 
@@ -868,7 +878,7 @@ void LapHoaDon(BSTNVRoot listNV, ListVT listVT) { // Nhap nhan vien -> hoa don
 				}
 
 				// Kiểm tra số lượng tồn
-				if (cthd.soLuong > listVT.list[viTri]->soLuongTon && cthd.trangThai == 1)
+				if (cthd.soLuong > listVT.list[viTri]->soLuongTon && hoaDon.loai == 'X')
 					ThongBao("So luong ton khong du.");
 			} while (cin.fail() || cthd.soLuong > listVT.list[viTri]->soLuongTon);
 
@@ -893,6 +903,7 @@ void LapHoaDon(BSTNVRoot listNV, ListVT listVT) { // Nhap nhan vien -> hoa don
 				if (cin.fail())
 					ThongBao("Vui long chi nhap so thuc.");
 			} while (cin.fail());
+			cin.ignore();
 
 			int i = hoaDon.listCTHD.n;
 			hoaDon.listCTHD.list[i] = cthd;
@@ -1069,6 +1080,7 @@ void LietKeHoaDon(BSTNVRoot listNV) {
 			break;
 		}
 
+		clrscr(); // xoa man hinh
 		LListHD hoaDon = nhanVien->data.listHD;
 
 		if (KhoangCachNgay(ngayBD, hoaDon->data.ngayLap) >= 0 && KhoangCachNgay(hoaDon->data.ngayLap, ngayKT) >= 0) {
@@ -1077,7 +1089,7 @@ void LietKeHoaDon(BSTNVRoot listNV) {
 				<< left << setw(20) << "Loai hoa don" << endl;
 			while (hoaDon != NULL) {
 				cout << left << setw(20) << hoaDon->data.soHoaDon
-					<< left << setw(20) << hoaDon->data.ngayLap.ngay << "/" << hoaDon->data.ngayLap.thang << "/" << hoaDon->data.ngayLap.nam
+					<< left << hoaDon->data.ngayLap.ngay << "/" << hoaDon->data.ngayLap.thang << "/" << left << setw(20) << hoaDon->data.ngayLap.nam
 					<< left << setw(20) << hoaDon->data.loai << endl;
 				hoaDon = hoaDon->pNext;
 			}
@@ -1135,6 +1147,168 @@ void ThongKeDoanhThu(BSTNVRoot listNV) {
 	_getch();
 }
 
+void LoadDuLieu(ListVT &listVT, BSTNVRoot &listNV) {
+	listNV = NULL;
+
+	clrscr();
+	ifstream file;
+	string line;
+
+	// Doc vat tu
+	file.open("vattu.txt");
+	getline(file, line);
+	listVT.n = stoi(line);
+	for (int i = 0; i < listVT.n; i++) {
+		VatTu vatTu;
+		getline(file, vatTu.maVatTu);
+		getline(file, vatTu.tenVatTu);
+		getline(file, vatTu.donViTinh);
+		getline(file, line);
+		vatTu.soLuongTon = stof(line);
+		listVT.list[i] = new VatTu(vatTu);
+	}
+	file.close();	
+
+	// Doc nhan vien
+	file.open("nhanvien.txt");
+	getline(file, line);
+	int n = stoi(line);
+	for (int i = 0; i < n; i++) {
+		NhanVien nhanVien; // tao nhan vien moi
+		getline(file, line);
+		nhanVien.maNhanVien = stoi(line); // ma nv
+		getline(file, line);
+		nhanVien.ho = line; // ho
+		getline(file, line);
+		nhanVien.ten = line; // ten
+		// Danh sach hoa don
+		nhanVien.listHD = NULL;
+		getline(file, line);
+		int m = stoi(line);
+		for(int i = 0; i < m; i++) {
+			HoaDon hoaDon;
+			getline(file, line);
+			hoaDon.soHoaDon = line; // so hoa don
+			getline(file, line);
+			hoaDon.ngayLap.ngay = stoi(line); // ngay lap
+			getline(file, line);
+			hoaDon.ngayLap.thang = stoi(line); // thang lap
+			getline(file, line);
+			hoaDon.ngayLap.nam = stoi(line); // nam lap
+			getline(file, line);
+			hoaDon.loai = line[0]; //loai hoa don
+			// Danh sach CTHD
+			getline(file, line);
+			hoaDon.listCTHD.n = stoi(line);
+			for (int i = 0; i < hoaDon.listCTHD.n; i++) {
+				getline(file, line);
+				hoaDon.listCTHD.list[i].maVatTu = line;
+				getline(file, line);
+				hoaDon.listCTHD.list[i].soLuong = stoi(line);
+				getline(file, line);
+				hoaDon.listCTHD.list[i].donGia = stoi(line);
+				getline(file, line);
+				hoaDon.listCTHD.list[i].VAT = stof(line);
+				getline(file, line);
+				hoaDon.listCTHD.list[i].trangThai = line[0];
+			}
+			ThemNodeLListHD(nhanVien.listHD, TaoNodeLListHD(hoaDon));
+		}
+		ThemNodeBSTNV(listNV, TaoNodeBSTNV(nhanVien));
+	}
+
+	cout << "Da load";
+	_getch();
+}
+
+void LuuDuLieu(ListVT listVT, BSTNVRoot listNV) {
+	clrscr();
+	ofstream file;
+	file.open("vattu.txt");
+	file << listVT.n << '\n';
+	for (int i = 0; i < listVT.n; i++) {
+		file << listVT.list[i]->maVatTu << endl;
+		file << listVT.list[i]->tenVatTu << endl;
+		file << listVT.list[i]->donViTinh << endl;
+		file << listVT.list[i]->soLuongTon << endl;
+	}
+	file.close();
+
+	file.open("nhanvien.txt");
+
+	// Danh sach nhan vien
+	int n = 0;
+	NhanVien* mangNV = new NhanVien[SoPhanTuBSTNV(listNV)];
+	LayMangBSTNV(listNV, mangNV, n);
+	file << n << endl;
+	for(int i = 0; i < n; i++) {
+		file << mangNV[i].maNhanVien << endl;
+		file << mangNV[i].ho << endl;
+		file << mangNV[i].ten << endl;
+		// Danh sach hoa don
+		LListHD listHD = mangNV[i].listHD;
+		int m = SoPhanTuLListHD(listHD);
+		file << m << endl;
+		while (listHD != NULL) {
+			file << listHD->data.soHoaDon << endl;
+			file << listHD->data.ngayLap.ngay << endl;
+			file << listHD->data.ngayLap.thang << endl;
+			file << listHD->data.ngayLap.nam << endl;
+			file << listHD->data.loai << endl;
+			// Danh sach CTHD
+			file << listHD->data.listCTHD.n << endl;
+			ListCTHD listCTHD = listHD->data.listCTHD;
+			for (int i = 0; i < listCTHD.n; i++) {
+				file << listCTHD.list[i].maVatTu << endl;
+				file << listCTHD.list[i].soLuong << endl;
+				file << listCTHD.list[i].donGia << endl;
+				file << listCTHD.list[i].VAT << endl;
+				file << listCTHD.list[i].trangThai << endl;
+			}
+			listHD = listHD->pNext;
+		}
+	}
+
+	cout << "Da luu";
+	_getch();
+}
+
+void SaveFile(ListVT& listVT, BSTNVRoot& listNV) {
+	FILE* f;
+	if ((f = fopen("vattu.txt", "wb")) == NULL)
+	{
+		ThongBao("Loi mo file de ghi"); return;
+	}
+	for (int i = 0; i < listVT.n; i++)
+		fwrite(listVT.list[i], sizeof(VatTu), 1, f);
+	fclose(f);
+	ThongBao("Da ghi xong danh sach vao file");
+
+}
+void OpenFile(ListVT& listVT, BSTNVRoot& listNV) {
+	FILE* f;
+
+	if ((f = fopen("vattu.txt", "rb")) == NULL)
+	{
+		ThongBao("Loi mo file de doc"); return;
+	}
+
+	listVT.n = 0;
+	if (fread(listVT.list[listVT.n], sizeof(VatTu), 1, f) != 1) {
+		cout << "loi";
+		system("pause");
+	}
+
+	while (fread(listVT.list[listVT.n], sizeof(VatTu), 1, f) != 1) {
+		cout << "toi day";
+		system("pause");
+		listVT.n++;
+	}
+
+	fclose(f);
+	ThongBao("Da load xong danh sach vao bo nho");
+}
+
 int main() {
 	LListHD listHD = NULL;
 	ListVT listVT;
@@ -1187,7 +1361,13 @@ int main() {
 		case 13:
 			ThongKeDoanhThu(listNV);
 			break;
+		case 14:
+			LoadDuLieu(listVT, listNV);
+			break;
 		case 15:
+			LuuDuLieu(listVT, listNV);
+			break;
+		case 16:
 			return 0;
 			break;
 		default:
