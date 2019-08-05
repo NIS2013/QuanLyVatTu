@@ -1,9 +1,7 @@
 ﻿// Các tính năng còn thiếu
 // - kiểm tra điều kiện dữ liệu nhập vào
 // - các tính năng
-// - kiểm tra ngày tháng năm
 
-// - kiểm tra nhập dữ liệu
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <iostream>
@@ -15,7 +13,7 @@
 using namespace std;
 
 // Hằng số
-const int SO_ITEM_MENU = 15;
+const int SO_ITEM_MENU = 16;
 
 const int MAX_VAT_TU = 100;
 const int MAX_CTHD = 20;
@@ -36,9 +34,10 @@ char listThucDon[SO_ITEM_MENU][50] = {  "--1.  Them vat tu",
 										"10. Tra hang",
 										"11. In hoa don",
 										"12. Liet ke hoa don theo nhan vien",
-										"13. Load du lieu tu file",
-										"14. Luu du lieu vao file",
-										"--15. Thoat" };
+										"13. Thong ke doanh thu theo nam",
+										"14. Load du lieu tu file",
+										"15. Luu du lieu vao file",
+										"--16. Thoat" };
 
 // Biến
 int dong = 5;
@@ -127,7 +126,8 @@ void ThemNodeLListHD(LListHD & L, LListHDNode * node) // Thêm node vào đầu 
 {
 	node->pNext = L;
 	L = node;
-}
+   }
+
 
 LListHDNode* TimNodeLListHD(LListHD L, string maHoaDon) { // Tìm node trong DS
 	while (L != NULL)
@@ -192,8 +192,8 @@ void ThemNodeBSTNV(BSTNVRoot & L, BSTNVNode * node) {
 	}
 };
 
-BSTNVRoot TimNodeBSTNV(BSTNVRoot & L, int key) {
-	if (L == NULL)
+BSTNVNode* TimNodeBSTNV(BSTNVRoot & L, int key) { // Tim theo ma nv
+	if (L == NULL) // cay rong
 		return NULL;
 	if (L->key == key)
 		return L;
@@ -266,6 +266,7 @@ void XoaNodeBSTNV(BSTNVRoot & L, int key) {
 			nodeDuyet->key = tmp->key;
 			nodeDuyet->data = tmp->data;
 			nodeDuyet->pRight = tmp->pRight;
+			delete tmp;
 		}
 		else { // Node xoá có node con phải có node trái -> duyệt đến node trái nhỏ nhất
 			BSTNVNode* nodeDuyet2 = tmp;
@@ -299,7 +300,7 @@ void LayMangBSTNV(BSTNVRoot L, NhanVien* mangNV, int &n ) {
 	}
 }
 
-LListHDNode* TimNodeHDBSTNV(BSTNVRoot L, string key) {
+LListHDNode* TimNodeHDBSTNV(BSTNVRoot L, string key) { // duyet node - left - right
 	if (L == NULL)
 		return NULL;
 
@@ -352,16 +353,18 @@ int ChonMenuChinh(char listThucDon[SO_ITEM_MENU][50]) { // Hàm chọn các menu
 		switch (phim)
 		{
 		case KEY_UP:
-			if (itemDaChon + 1 > 1) {
+			if (itemDaChon + 1 > 1)
 				itemDaChon--;
-				VeMenuChinh(listThucDon, itemDaChon);
-			}
+			else
+				itemDaChon = SO_ITEM_MENU - 1;
+			VeMenuChinh(listThucDon, itemDaChon);
 			break;
 		case KEY_DOWN:
-			if (itemDaChon + 1 < SO_ITEM_MENU) {
+			if (itemDaChon + 1 < SO_ITEM_MENU)
 				itemDaChon++;
-				VeMenuChinh(listThucDon, itemDaChon);
-			}
+			else
+				itemDaChon = 0;
+			VeMenuChinh(listThucDon, itemDaChon);
 			break;
 		case KEY_ENTER:
 			return itemDaChon + 1;
@@ -418,8 +421,6 @@ void NhapVatTu(ListVT & listVT) { // Nhap danh sach vat tu
 		cin >> vatTu.soLuongTon;
 		while (cin.fail()) {
 			ThongBao("Vui long chi nhap so thuc.");
-			cin.clear();
-			cin.ignore();
 			cin >> vatTu.soLuongTon;
 		}
 		cin.ignore();
@@ -706,6 +707,7 @@ int KhoangCachNgay(Ngay ngay1, Ngay ngay2) { // Tinh khoang cach so ngay giua 2 
 Ngay NgayHienTai() {
 	Ngay ngay;
 
+	// Lay thoi gian hien tai cua may
 	time_t rawtime;
 	struct tm* timeinfo;
 	time(&rawtime);
@@ -775,19 +777,12 @@ void NhapNgay(Ngay & ngay) {
 	};
 }
 
-void LapHoaDon(LListHD listHD, BSTNVRoot listNV, ListVT listVT) {
+void LapHoaDon(BSTNVRoot listNV, ListVT listVT) { // Nhap nhan vien -> hoa don
 	HoaDon hoaDon;
 	char loaiHoaDon;
 	int iMaNhanVien;
 	string maNhanVien;
 	for (;;) {
-		// TH danh sach day
-		if (hoaDon.listCTHD.n >= MAX_CTHD)
-		{
-			ThongBao("Danh sach day");
-			break;
-		}
-
 		clrscr(); // Xoa man hinh
 		// Nhap du lieu
 		cout << "Nhap ma nhan vien (Nhap X de ket thuc): ";
@@ -796,6 +791,11 @@ void LapHoaDon(LListHD listHD, BSTNVRoot listNV, ListVT listVT) {
 		// Thoat neu nhap x
 		if (maNhanVien == "X" || maNhanVien == "x")
 			return;
+
+		if (maNhanVien == "") {
+			ThongBao("Vui long nhap ma nhan vien");
+			continue;
+		}
 
 		// Kiểm tra và chuyển dữ liệu nhập  (Mã nhân viên)
 		try {
@@ -813,8 +813,11 @@ void LapHoaDon(LListHD listHD, BSTNVRoot listNV, ListVT listVT) {
 			continue;
 		}
 
-		cout << "Nhap so hoa don: ";
-		getline(cin, hoaDon.soHoaDon);
+		do {
+			cout << "Nhap so hoa don: ";
+			getline(cin, hoaDon.soHoaDon);
+		} while (hoaDon.soHoaDon == "");// kiem tra trung hd
+
 
 		do {
 			cout << "Nhap loai hoa don (N: nhap, X: xuat): ";
@@ -992,8 +995,10 @@ void InHoaDon(BSTNVRoot listNV) {
 	cin >> soHoaDon;
 
 	hoaDon = TimNodeHDBSTNV(listNV, soHoaDon);
-	if (hoaDon == NULL)
+	if (hoaDon == NULL) {
 		ThongBao("Khong tim thay hoa don");
+		return;
+	}
 
 	cout << "So hoa don: " << hoaDon->data.soHoaDon << endl
 		<< "Ngay lap: " << hoaDon->data.ngayLap.ngay << "/" << hoaDon->data.ngayLap.thang << "/" << hoaDon->data.ngayLap.nam << endl
@@ -1021,7 +1026,8 @@ void InHoaDon(BSTNVRoot listNV) {
 void LietKeHoaDon(BSTNVRoot listNV) {
 	string maNhanVien;
 	int iMaNhanVien;
-	Ngay ngayBT;
+	BSTNVNode* nhanVien;
+	Ngay ngayBD;
 	Ngay ngayKT;
 
 	for (;;) {
@@ -1044,14 +1050,89 @@ void LietKeHoaDon(BSTNVRoot listNV) {
 		}
 
 		// Tìm nhân viên trong danh sách
-		BSTNVNode* nodeNhanVien = TimNodeBSTNV(listNV, iMaNhanVien);
-		if (nodeNhanVien == NULL) {
+		nhanVien = TimNodeBSTNV(listNV, iMaNhanVien);
+		if (nhanVien == NULL) {
 			ThongBao("Ma nhan vien khong ton tai");
 			continue;
 		}
 
-		
+		for (;;) {
+			cout << "Nhap ngay bat dau: " << endl;
+			NhapNgay(ngayBD);
+			cout << "Nhap ngay ket thuc: " << endl;
+			NhapNgay(ngayKT);
+
+			if (KhoangCachNgay(ngayBD, ngayKT) < 0) { // kiem tra ngay bat dau & ngay ket thuc
+				ThongBao("Ngay ket thuc phai sau ngay bat dau");
+				continue;
+			}
+			break;
+		}
+
+		LListHD hoaDon = nhanVien->data.listHD;
+
+		if (KhoangCachNgay(ngayBD, hoaDon->data.ngayLap) >= 0 && KhoangCachNgay(hoaDon->data.ngayLap, ngayKT) >= 0) {
+			cout << left << setw(20) << "So hoa don"
+				<< left << setw(20) << "Ngay lap"
+				<< left << setw(20) << "Loai hoa don" << endl;
+			while (hoaDon != NULL) {
+				cout << left << setw(20) << hoaDon->data.soHoaDon
+					<< left << setw(20) << hoaDon->data.ngayLap.ngay << "/" << hoaDon->data.ngayLap.thang << "/" << hoaDon->data.ngayLap.nam
+					<< left << setw(20) << hoaDon->data.loai << endl;
+				hoaDon = hoaDon->pNext;
+			}
+		}
+		_getch();
 	}
+}
+
+int DoanhThuHoaDon(HoaDon hoaDon) {
+	if (hoaDon.loai == 'N')
+		return 0;
+	int doanhThu = 0;
+	for (int i = 0; i < hoaDon.listCTHD.n; i++) {
+		ChiTietHoaDon cthd = hoaDon.listCTHD.list[i];
+		if (cthd.trangThai == 1)
+			doanhThu += cthd.donGia * cthd.soLuong;
+			// doanhThu += cthd.donGia * cthd.soLuong * (1 + cthd.VAT/100);
+	}
+	return doanhThu;
+}
+
+void DoanhThu(BSTNVRoot L, int doanhThu[12], int nam) {
+	if (L == NULL)
+		return;
+
+	LListHDNode* nodeHD = L->data.listHD;
+	while (nodeHD != NULL) {
+		if (nodeHD->data.ngayLap.nam == nam)
+			doanhThu[nodeHD->data.ngayLap.thang - 1] += DoanhThuHoaDon(nodeHD->data);
+		nodeHD = nodeHD->pNext;
+	}
+	DoanhThu(L->pLeft, doanhThu, nam);
+	DoanhThu(L->pRight, doanhThu, nam);
+}
+
+void ThongKeDoanhThu(BSTNVRoot listNV) {
+	clrscr();
+	int nam;
+	int doanhThu[12]{ 0,0,0,0,0,0,0,0,0,0,0,0 };
+
+	cout << "Nhap nam: ";
+	cin >> nam;
+
+	DoanhThu(listNV, doanhThu, nam);
+
+	clrscr();
+	cout << "THONG KE DOANH THU NAM " << nam << endl <<endl;
+	cout << left << setw(20) << "Thang"
+		<< left << setw(20) << "Doanh thu" << endl;
+	for (int i = 0; i < 12; i++) {
+		cout << left << setw(20) << i + 1
+			<< left << setw(20) << doanhThu[i] << endl;
+	}
+
+	_getch();
 }
 
 int main() {
@@ -1092,13 +1173,19 @@ int main() {
 			InNhanVien(listNV);
 			break;
 		case 9:
-			LapHoaDon(listHD, listNV, listVT);
+			LapHoaDon(listNV, listVT);
 			break;
 		case 10:
 			TraHang(listNV, listVT);
 			break;
 		case 11:
 			InHoaDon(listNV);
+			break;
+		case 12:
+			LietKeHoaDon(listNV);
+			break;
+		case 13:
+			ThongKeDoanhThu(listNV);
 			break;
 		case 15:
 			return 0;
