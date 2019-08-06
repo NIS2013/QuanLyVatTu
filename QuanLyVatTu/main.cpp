@@ -512,14 +512,17 @@ void LietKeVatTu(ListVT listVT) { // Liệt kê vật tư theo tên tăng dần
 	for (int i = 0; i < listTam.n; i++)
 		listTam.list[i] = listVT.list[i];
 
-	// Sap xep
-	for (int i = 0; i < listTam.n; i++)
+	// Sap xep (selection sort)
+	for (int i = 0; i < listTam.n; i++) {
+		int max_idx = i;
 		for (int j = i + 1; j < listTam.n; j++)
-			if (listTam.list[i]->tenVatTu.compare(listTam.list[j]->tenVatTu) > 0) {
-				VatTu* vatTu = listTam.list[i];
-				listTam.list[i] = listTam.list[j];
-				listTam.list[j] = vatTu;
-			}
+			if (listTam.list[max_idx]->tenVatTu.compare(listTam.list[j]->tenVatTu) > 0)
+				max_idx = j;
+		// doi cho max_idx va i
+		VatTu* vatTu = listTam.list[i];
+		listTam.list[i] = listTam.list[max_idx];
+		listTam.list[max_idx] = vatTu;
+	}
 
 	cout << left << setw(16) << "Ma vat tu" 
 		<< left << setw(16) << "Ten vat tu" 
@@ -654,20 +657,20 @@ void InNhanVien(BSTNVRoot listNV) {
 	
 
 	// Sap xep ten tang dan va ho tang dan
-	for (int i = 0; i < n; i++)
+	for (int i = 0; i < n; i++) {
+		int max_idx = i;
 		for (int j = 0; j < n; j++) {
-			if (mangNV[i].ten.compare(mangNV[j].ten) < 0) {
-				NhanVien nvTam = mangNV[i];
-				mangNV[i] = mangNV[j];
-				mangNV[j] = nvTam;
-			}
-			else if (mangNV[i].ten.compare(mangNV[j].ten) == 0)
-				if (mangNV[i].ho.compare(mangNV[j].ho) < 0) {
-					NhanVien nvTam = mangNV[i];
-					mangNV[i] = mangNV[j];
-					mangNV[j] = nvTam;
-				}
+			if (mangNV[max_idx].ten.compare(mangNV[j].ten) < 0)
+				max_idx = j;
+			else if (mangNV[max_idx].ten.compare(mangNV[j].ten) == 0)
+				if (mangNV[max_idx].ho.compare(mangNV[j].ho) < 0)
+					max_idx = j;
+			// doi cho max_idx va i
+			NhanVien nvTam = mangNV[i];
+			mangNV[i] = mangNV[max_idx];
+			mangNV[max_idx] = nvTam;
 		}
+	}
 
 	// Xuat ra man hinh
 	clrscr(); // Xoa man hinh
