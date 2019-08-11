@@ -23,22 +23,22 @@ const int KEY_UP = 72;
 const int KEY_DOWN = 80;
 const int KEY_ENTER = 13;
 
-char listThucDon[SO_ITEM_MENU][50] = {  "--1.  Them vat tu",
-										"--2.  Xoa vat tu",
-										"--3.  Hieu Chinh Vat Tu",
-										"x-4.  Liet ke danh sach vat tu",
-										"--5.  Them nhan vien",
-										"--6.  Xoa nhan vien",
-										"--7.  Hieu chinh nhan vien",
-										"x-8.  In danh sach nhan vien", // chưa liệt kê theo thứ tự yêu cầu
-										"x-9.  Lap hoa don",
+char listThucDon[SO_ITEM_MENU][50] = {  "01. Them vat tu",
+										"02. Xoa vat tu",
+										"03. Hieu Chinh Vat Tu",
+										"04. Liet ke danh sach vat tu",
+										"05. Them nhan vien",
+										"06. Xoa nhan vien",
+										"07. Hieu chinh nhan vien",
+										"08. In danh sach nhan vien",
+										"09. Lap hoa don",
 										"10. Tra hang",
 										"11. In hoa don",
 										"12. Liet ke hoa don theo nhan vien",
 										"13. Thong ke doanh thu theo nam",
 										"14. Load du lieu tu file",
 										"15. Luu du lieu vao file",
-										"--16. Thoat" };
+										"16. Thoat" };
 
 // Biến
 int dong = 5;
@@ -525,12 +525,12 @@ void LietKeVatTu(ListVT listVT) { // Liệt kê vật tư theo tên tăng dần
 	}
 
 	cout << left << setw(16) << "Ma vat tu" 
-		<< left << setw(16) << "Ten vat tu" 
+		<< left << setw(26) << "Ten vat tu" 
 		<< left << setw(16) << "Don vi tinh" 
 		<< left << setw(16) << "So luong ton" << endl;
 	for (int i = 0; i < listTam.n; i++)
 		cout << left << setw(16) << listTam.list[i]->maVatTu 
-			<< left << setw(16) << listTam.list[i]->tenVatTu 
+			<< left << setw(26) << listTam.list[i]->tenVatTu 
 			<< left << setw(16) << listTam.list[i]->donViTinh 
 			<< left << setw(16) << listTam.list[i]->soLuongTon << endl;
 	_getch();
@@ -654,21 +654,20 @@ void InNhanVien(BSTNVRoot listNV) {
 	// Copy danh sach nhan vien
 	NhanVien* mangNV = new NhanVien[SoPhanTuBSTNV(listNV)];
 	LayMangBSTNV(listNV, mangNV, n);
-	
 
 	// Sap xep ten tang dan va ho tang dan
 	for (int i = 0; i < n; i++) {
-		int max_idx = i;
+		int min_idx = i;
 		for (int j = 0; j < n; j++) {
-			if (mangNV[max_idx].ten.compare(mangNV[j].ten) < 0)
-				max_idx = j;
-			else if (mangNV[max_idx].ten.compare(mangNV[j].ten) == 0)
-				if (mangNV[max_idx].ho.compare(mangNV[j].ho) < 0)
-					max_idx = j;
+			if (mangNV[min_idx].ten.compare(mangNV[j].ten) < 0)
+				min_idx = j;
+			else if (mangNV[min_idx].ten.compare(mangNV[j].ten) == 0)
+				if (mangNV[min_idx].ho.compare(mangNV[j].ho) < 0)
+					min_idx = j;
 			// doi cho max_idx va i
 			NhanVien nvTam = mangNV[i];
-			mangNV[i] = mangNV[max_idx];
-			mangNV[max_idx] = nvTam;
+			mangNV[i] = mangNV[min_idx];
+			mangNV[min_idx] = nvTam;
 		}
 	}
 
@@ -736,8 +735,6 @@ Ngay NgayHienTai() {
 void NhapNgay(Ngay & ngay) {
 	for (;;) {
 		do {
-			cin.clear();
-			cin.ignore();
 			cout << "Nhap ngay: ";
 			cin >> ngay.ngay;
 
@@ -1037,6 +1034,17 @@ void InHoaDon(BSTNVRoot listNV) {
 	_getch();
 }
 
+int DoanhThuHoaDon(HoaDon hoaDon) {
+	int doanhThu = 0;
+	for (int i = 0; i < hoaDon.listCTHD.n; i++) {
+		ChiTietHoaDon cthd = hoaDon.listCTHD.list[i];
+		if (cthd.trangThai == 1)
+			doanhThu += cthd.donGia * cthd.soLuong;
+		// doanhThu += cthd.donGia * cthd.soLuong * (1 + cthd.VAT/100);
+	}
+	return doanhThu;
+}
+
 void LietKeHoaDon(BSTNVRoot listNV) {
 	string maNhanVien;
 	int iMaNhanVien;
@@ -1089,29 +1097,18 @@ void LietKeHoaDon(BSTNVRoot listNV) {
 		if (KhoangCachNgay(ngayBD, hoaDon->data.ngayLap) >= 0 && KhoangCachNgay(hoaDon->data.ngayLap, ngayKT) >= 0) {
 			cout << left << setw(20) << "So hoa don"
 				<< left << setw(20) << "Ngay lap"
-				<< left << setw(20) << "Loai hoa don" << endl;
+				<< left << setw(20) << "Loai hoa don"
+				<< left << setw(20) << "Tri gia" << endl;
 			while (hoaDon != NULL) {
 				cout << left << setw(20) << hoaDon->data.soHoaDon
 					<< left << hoaDon->data.ngayLap.ngay << "/" << hoaDon->data.ngayLap.thang << "/" << left << setw(20) << hoaDon->data.ngayLap.nam
-					<< left << setw(20) << hoaDon->data.loai << endl;
+					<< left << setw(20) << hoaDon->data.loai
+					<< left << setw(20) << DoanhThuHoaDon(hoaDon->data) << endl;
 				hoaDon = hoaDon->pNext;
 			}
 		}
 		_getch();
 	}
-}
-
-int DoanhThuHoaDon(HoaDon hoaDon) {
-	if (hoaDon.loai == 'N')
-		return 0;
-	int doanhThu = 0;
-	for (int i = 0; i < hoaDon.listCTHD.n; i++) {
-		ChiTietHoaDon cthd = hoaDon.listCTHD.list[i];
-		if (cthd.trangThai == 1)
-			doanhThu += cthd.donGia * cthd.soLuong;
-			// doanhThu += cthd.donGia * cthd.soLuong * (1 + cthd.VAT/100);
-	}
-	return doanhThu;
 }
 
 void DoanhThu(BSTNVRoot L, int doanhThu[12], int nam) {
@@ -1120,7 +1117,7 @@ void DoanhThu(BSTNVRoot L, int doanhThu[12], int nam) {
 
 	LListHDNode* nodeHD = L->data.listHD;
 	while (nodeHD != NULL) {
-		if (nodeHD->data.ngayLap.nam == nam)
+		if (nodeHD->data.ngayLap.nam == nam && nodeHD->data.loai == 'X')
 			doanhThu[nodeHD->data.ngayLap.thang - 1] += DoanhThuHoaDon(nodeHD->data);
 		nodeHD = nodeHD->pNext;
 	}
@@ -1168,7 +1165,7 @@ void LoadDuLieu(ListVT &listVT, BSTNVRoot &listNV) {
 		getline(file, vatTu.donViTinh);
 		getline(file, line);
 		vatTu.soLuongTon = stof(line);
-		listVT.list[i] = new VatTu(vatTu);
+		listVT.list[i] = new VatTu(vatTu); 
 	}
 	file.close();	
 
